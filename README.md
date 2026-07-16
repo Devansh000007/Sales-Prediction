@@ -1,133 +1,81 @@
-# Sales-Prediction
-Machine learning project for predicting sales using Python and Jupyter Notebook.
-# 📈 Sales Prediction using Machine Learning
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-## 📌 Project Overview
+from google.colab import files
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
-This project focuses on predicting sales using machine learning techniques. The notebook demonstrates the complete data science workflow, including data preprocessing, exploratory data analysis (EDA), feature engineering, model training, evaluation, and prediction.
+# Upload dataset
+print("Upload Advertising.csv")
+uploaded = files.upload()
 
-The objective is to build a predictive model that can accurately estimate future sales based on historical data and relevant features.
+# Read uploaded file automatically
+filename = list(uploaded.keys())[0]
+df = pd.read_csv(filename)
 
----
+print("\nFirst 5 Rows:")
+print(df.head())
 
-## 🚀 Features
+print("\nColumn Names:")
+print(df.columns)
 
-* Data cleaning and preprocessing
-* Exploratory Data Analysis (EDA)
-* Feature selection and engineering
-* Machine Learning model training
-* Model evaluation using performance metrics
-* Sales prediction on unseen data
-* Well-documented Jupyter Notebook
+# Remove extra column if present
+if "Unnamed: 0" in df.columns:
+    df.drop(columns=["Unnamed: 0"], inplace=True)
 
----
+# Convert all column names to lowercase
+df.columns = df.columns.str.lower()
 
-## 🛠️ Technologies Used
+print("\nUpdated Columns:")
+print(df.columns)
 
-* Python
-* Jupyter Notebook
-* NumPy
-* Pandas
-* Matplotlib
-* Seaborn
-* Scikit-learn
+# Check missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
 
----
+# Features and Target
+X = df[['tv', 'radio', 'newspaper']]
+y = df['sales']
 
-## 📂 Project Structure
+# Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
-```text
-Sales-Prediction/
-│── Sales_Prediction.ipynb
-│── README.md
-│── requirements.txt
-│── .gitignore
-```
+# Train Model
+model = LinearRegression()
+model.fit(X_train, y_train)
 
----
+# Prediction
+y_pred = model.predict(X_test)
 
-## 📊 Workflow
+# Evaluation
+print("\n========== RESULTS ==========")
+print("R² Score :", round(r2_score(y_test, y_pred), 3))
+print("MAE      :", round(mean_absolute_error(y_test, y_pred), 3))
+print("RMSE     :", round(mean_squared_error(y_test, y_pred) ** 0.5, 3))
 
-1. Import required libraries
-2. Load the dataset
-3. Clean and preprocess data
-4. Perform exploratory data analysis
-5. Engineer relevant features
-6. Train machine learning model(s)
-7. Evaluate model performance
-8. Generate sales predictions
+# Actual vs Predicted Plot
+plt.figure(figsize=(6,4))
+plt.scatter(y_test, y_pred)
+plt.xlabel("Actual Sales")
+plt.ylabel("Predicted Sales")
+plt.title("Actual vs Predicted Sales")
+plt.grid(True)
+plt.show()
 
----
+# Feature Importance
+importance = pd.DataFrame({
+    "Feature": X.columns,
+    "Coefficient": model.coef_
+}).sort_values(by="Coefficient", ascending=False)
 
-## 📦 Installation
+print("\nFeature Importance:")
+print(importance)
 
-Clone the repository:
-
-```bash
-git clone https://github.com/your-username/Sales-Prediction.git
-cd Sales-Prediction
-```
-
-Install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-Launch Jupyter Notebook:
-
-```bash
-jupyter notebook
-```
-
-Open:
-
-```text
-Sales_Prediction.ipynb
-```
-
----
-
-## 📈 Results
-
-The trained machine learning model predicts sales based on the provided input features. Model performance is evaluated using appropriate regression metrics such as:
-
-* Mean Absolute Error (MAE)
-* Mean Squared Error (MSE)
-* Root Mean Squared Error (RMSE)
-* R² Score
-
----
-
-## 🎯 Future Improvements
-
-* Hyperparameter tuning
-* Cross-validation
-* Compare multiple regression algorithms
-* Deploy the model as a web application
-* Build an interactive dashboard
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome.
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push the branch
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-## 👨‍💻 Author
-
-**devansh negi**
-
+plt.figure(figsize=(6,4))
+sns.barplot(data=importance, x="Coefficient", y="Feature")
+plt.title("Feature Importance")
+plt.show()
